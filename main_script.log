@@ -1,0 +1,12 @@
+
+##Tree simulation: SimPhy 
+####################################
+
+simphy -Rs 10000 -Rl U:10,500 -Rg 1 -St U:100000,7500000 -si U:1,5 -Sl U:10,50 -Sb L:-14,1 -SP L:12,0.5 -Hs L:1.5,1 -Hl L:1.2,1 -Hg L:1.4,1 -SU E:10000000 -OD 1 -op 1 -oc 1 -v 1 -So SL:0,0.1,0.5 -Cs 22 -O simulations_broadsims
+
+##Sequence simulation: post_simphy.pl + indelible
+#################################################
+
+perl ./scripts/post_simphy.pl simulations_broadsims 1
+
+qsub -t 1-10000 run_indelible.sh

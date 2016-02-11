@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
-
 use strict;
+use warnings;
 
 use lib '/home/dmallo/lib';
 #GSL
@@ -191,6 +190,6 @@ foreach my  $dir (@dirs)
 $SQL->commit();
 $SQL->disconnect or die $DBI::errstr;
 
-#print "Parallel sequence simulation\n";
-#system("ls -d [0-9][0-9][0-9] | parallel -P $n_threads 'cd {} && indelible'");
+print "Parallel sequence simulation\n";
+system("ls -d [0-9][0-9][0-9] | parallel -P $n_threads 'cd {} && indelible'");
 
