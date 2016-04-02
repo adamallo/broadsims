@@ -40,9 +40,10 @@ else
         exit
 fi
 
+method="concat_test"
 cd $dir/$id
-for input_file in *_TRUE.phy
-do
-	outfile=$(echo $input_file | sed "s/_TRUE.phy//")
-	/usr/bin/time -p -o$outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $outfile
-done
+mkdir $method
+cd $method
+outfile=$method
+/usr/bin/time -p -o time.stat raxmlHPC-SSE3 -s ../concat.phy -m GTRGAMMA -p 2222 -N 20 -n $outfile 1>$method.out 2>$method.err
+mv RAxML_bestTree.$outfile $method.tree

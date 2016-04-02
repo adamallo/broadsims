@@ -41,8 +41,30 @@ else
 fi
 
 cd $dir/$id
-for input_file in *_TRUE.phy
+rm -f 
+infile=$(ls g_trees* | head -n 1)
+tips=$(cat $infile | sed -e 's/:[^,)]*//g' -e 's/(//g' -e 's/)//g' -e 's/,/ /g' -e 's/;/ /g' | tr '\n' ' ')
+tips=( $tips )
+tips=$(printf "%s\n" "${tips[@]}")
+species=$(echo $tips | sed -e 's/\([0-9]*\)_[0-9]*_[0-9]*/\1/g')
+species=( $species )
+species=$(printf "%s\n" "${species[@]}" | sort | uniq)
+species=( $species )
+tips=( $tips )
+tree="("
+for sp in ${species[@]}
 do
-	outfile=$(echo $input_file | sed "s/_TRUE.phy//")
-	/usr/bin/time -p -o$outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $outfile
+	sp_tips=$(printf "%s\n" "${tips[@]}" | sed -n "/^${sp}_/p" | paste -s -d ",")
+	sp_tips="($sp_tips),"
+	tree="$tree$sp_tips"
+	#printf "%s\n" "${tips[@]}" > umm
+	#exit
+        #n_tips=$(echo $sp_tips | grep -o " " | wc -l)
+        #n_tips=$(($n_tips+1))
+        #echo $sp $n_tips $sp_tips >> $2
 done
+tree=$(echo $tree | sed 's/.$//')
+tree="${tree});"
+echo $tree
+echo $tree > constraintTree.trees
+exit

@@ -43,6 +43,13 @@ fi
 cd $dir/$id
 for input_file in *_TRUE.phy
 do
-	outfile=$(echo $input_file | sed "s/_TRUE.phy//")
-	/usr/bin/time -p -o$outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $outfile
+	nrep=$(echo $input_file | sed 's/_TRUE.phy//')
+	if [[ ! -s RAxML_bestTree.$nrep ]]
+	then
+		rm -f RAxML_info.$nrep
+		rm -f RAxML_log.${nrep}.*
+		rm -f RAxML_parsimonyTree.${nrep}.*
+		rm -f RAxML_result.${nrep}.*
+		/usr/bin/time -p -o $outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $nrep
+	fi
 done

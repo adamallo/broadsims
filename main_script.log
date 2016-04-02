@@ -2,15 +2,31 @@
 ##Tree simulation: SimPhy 
 ####################################
 
-simphy -Rs 10000 -Rl U:10,500 -Rg 1 -St U:100000,10000000 -si U:1,5 -Sl U:10,50 -Sb L:-14,1.6 -SP L:12,0.5 -Hs L:1.5,1 -Hl L:1.2,1 -Hg L:1.4,1 -SU E:10000000 -OD 1 -op 1 -oc 1 -v 1 -So SL:0,0.1,0.5 -Cs 22 -O simulations_broadsims
+simphy -Rs 10000 -Rl U:10,500 -Rg 1 -St U:100000,10000000 -si U:1,5 -Sl U:10,50 -Sb L:-14,1.6 -SP L:12,0.5 -Hs L:1.5,1 -Hl L:1.2,1 -Hg L:1.4,1 -SU E:10000000 -OD 1 -op 1 -oc 1 -v 1 -So SL:0,0.1,0.5 -Cs 22 -O sim_broadsims
 
 ##Sequence simulation: post_simphy.pl + indelible
 #################################################
+module load perl
 
-perl ./scripts/post_simphy.pl simulations_broadsims 1
+perl ./scripts/post_simphy.pl sim_broadsims 1
 
-qsub -t 1-10000 -e e_log/ -o o_log/ scripts/run_indelible.sh simulations_broadsims/
+qsub -t 1-10000 -e e_log/ -o o_log/ scripts/run_indelible.sh sim_broadsims/
 
 ## Elimination of redundant files
 ################################################
-for i in simulations_broadsims/*/ ; do rm -f $i/*.fas;rm -f $i/trees.txt;done
+for i in sim_broadsims/*/ ; do rm -f $i/*.fas;rm -f $i/trees.txt;done
+
+## Gene tree estimation
+################################################
+qsub -p -5 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/run_raxml_gtree.sh sim_broadsims/
+
+./check_raxml_gtree.sh ../sim_broadsims/ to_repeat.txt 5000 ##After cluster stopped
+
+while read line; do qsub -p -5 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/rerun_raxml_gtree.sh sim_broadsims/ $line;done < scripts/to_repeat.txt
+
+## Concatenation
+###############################################
+qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/concatenate.sh sim_broadsims/
+qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/root_split_concat.sh sim_broadsims/
+qsub -p -4 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/run_raxml_concat.sh sim_broadsims/ ##Actually I'm submitting bunchs of 500 jobs in order not to slow down much gene tree estimation
+

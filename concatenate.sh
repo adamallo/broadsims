@@ -5,6 +5,7 @@
 #$ -v LD_LIBRARY_PATH
 #$ -v PATH
 
+module load python/2.7.8
 if [[ $# -eq 1 ]]
 then
         if [[ -d $1 ]] && [[ -n "$SGE_TASK_ID" ]]
@@ -41,8 +42,5 @@ else
 fi
 
 cd $dir/$id
-for input_file in *_TRUE.phy
-do
-	outfile=$(echo $input_file | sed "s/_TRUE.phy//")
-	/usr/bin/time -p -o$outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $outfile
-done
+/share/apps/python/2.7.8/bin/python ~/bin/readseq_DM.py -o phylip -c TRUE.phy concat.phy
+
