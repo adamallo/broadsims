@@ -43,34 +43,7 @@ fi
 cd $dir/$id
 rm -f 
 infile=$(ls g_trees* | head -n 1)
-tips=$(cat $infile | sed -e 's/:[^,)]*//g' -e 's/(//g' -e 's/)//g' -e 's/,/ /g' -e 's/;/ /g' | tr '\n' ' ')
-tips=( $tips )
-tips=$(printf "%s\n" "${tips[@]}")
-species=$(echo $tips | sed -e 's/\([0-9]*\)_[0-9]*_[0-9]*/\1/g')
-species=( $species )
-species=$(printf "%s\n" "${species[@]}" | sort | uniq)
-species=( $species )
-tips=( $tips )
-tree="("
-for sp in ${species[@]}
-do
-	sp_tips=$(printf "%s\n" "${tips[@]}" | sed -n "/^${sp}_/p" | paste -s -d ",")
-	n_tips=$(echo $sp_tips | grep -o "," | wc -l)
-	if [[ $n_tips -eq 0 ]]
-	then
-		sp_tips="$sp_tips,"
-	else
-		sp_tips="($sp_tips),"
-	fi
-
-	tree="$tree$sp_tips"
-	#printf "%s\n" "${tips[@]}" > umm
-	#exit
-        #n_tips=$(echo $sp_tips | grep -o " " | wc -l)
-        #n_tips=$(($n_tips+1))
-        #echo $sp $n_tips $sp_tips >> $2
-done
-tree=$(echo $tree | sed 's/.$//')
-tree="${tree});"
+ingroup=$(cat $infile | sed -e 's/:[^,)]*//g' -e 's/\([,(]\)0_0_0.//g' -e 's/(//g' -e 's/)//g' -e 's/;//g')
+tree="(($ingroup),0_0_0);"
 echo $tree > constraintTree.trees
 exit

@@ -24,9 +24,17 @@ qsub -p -5 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts
 
 while read line; do qsub -p -5 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/rerun_raxml_gtree.sh sim_broadsims/ $line;done < scripts/to_repeat.txt
 
+#Something may be missing here with the check_raxml_gtree.sh but it is not really necessary
+./check_raxml_gtree2.sh > check.out2 ##Problematic replicates
+loop_rerun_raxml_gtree_perep.sh check.out2 > check.log ##Executing failed replicates with a different seed and logging the output for posterior debuging
+
+curdir="/home/dmallo/broadsims/new/scripts"
+datadir="/home/dmallo/broadsims/new/sim_broadsims"
+while IFS="," read folder rep id; do if [[ $(grep -c "Overall execution time" /home/dmallo/broadsims/new/repOlogs/rerun_raxml_gtree_perep.sh.o${id}) -eq 1 ]]; then echo $folder $rep Done; elif [[ $(grep -c "state number . is equal to zero in" /home/dmallo/broadsims/new/repOlogs/rerun_raxml_gtree_perep.sh.o${id}) -ne 0 ]]; then echo $folder $rep = missing data; elif [[ $(grep -c "setRateModel" /home/dmallo/broadsims/new/repOlogs/rerun_raxml_gtree_perep.sh.o${id}) -eq 1 ]]; then cd $datadir/$folder; qid=$(qsub -q compute-1-x.q,compute-0-x.q,compute-2-x.q -j y -e ../../repElogs/ -o ../../repOlogs/ $curdir/rerun_raxml_gtree_perep_cat.sh ${rep}_TRUE.phy | sed "s/.*job\ \(.*\)\ (.*/\1/"); echo New job $qid with GTRCAT for $folder $rep; cd $curdir; else echo $id Unknown error; fi;done<check.log>check2.log ###Still working on this
+
 ## Concatenation
 ###############################################
 qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/concatenate.sh sim_broadsims/
-qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/root_split_concat.sh sim_broadsims/
-qsub -p -4 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/run_raxml_concat.sh sim_broadsims/ ##Actually I'm submitting bunchs of 500 jobs in order not to slow down much gene tree estimation
+qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q gpu.q scripts/build_constraint_tree.sh sim_broadsims/
+qsub -p -4 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/run_raxml_concat.sh sim_broadsims/ ##Actually I'm running this in Finisterrae2 using a different script
 

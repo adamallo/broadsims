@@ -46,10 +46,11 @@ do
 	nrep=$(echo $input_file | sed 's/_TRUE.phy//')
 	if [[ ! -s RAxML_bestTree.$nrep ]]
 	then
+		echo "Reruning $dir/$id rep $nrep"
 		rm -f RAxML_info.$nrep
 		rm -f RAxML_log.${nrep}.*
 		rm -f RAxML_parsimonyTree.${nrep}.*
 		rm -f RAxML_result.${nrep}.*
-		/usr/bin/time -p -o $outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $nrep
+		/usr/bin/time -p -o ${nrep}.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $nrep
 	fi
 done
