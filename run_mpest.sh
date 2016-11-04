@@ -46,9 +46,8 @@ do
 		nind=${#individuals[*]}
 		smap=$(echo "$smap$sp $nind ${individuals[*]}\n")
 	done
-	echo -e "../data/gtrees_estimated.trees\n0\n$seed\n$nruns\n$nloci $ntaxa\n${smap}0" > "$H/$id/$method/control.file"
-
 	mkdir -p $H/$id/$method
+	echo -e "../data/gtrees_estimated.trees\n0\n$seed\n$nruns\n$nloci $ntaxa\n${smap}0" > "$H/$id/$method/control.file"
 	cd $H/$id/$method
 
 #test -s $method.tre && echo output already exists. 
