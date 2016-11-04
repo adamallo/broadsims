@@ -59,7 +59,7 @@ do
 	
 	#Choos the best tree
 	besttreeline=$(grep -n "tree mpest" $method.trees.nex | sed -e "s/ .*\[/ /g" -e "s/\].*//g" -e "s/://g"| awk 'BEGIN{OFS=","}{print $2,$1}' | shuf | sort -s -k1,1 -n --field-separator="," | head -n 1 | awk 'BEGIN{FS=","}{print($2)}')	
-	cat $method.trees.nex | perl -0777 -pe "s/tree mpest.*$//gsm" >> $method.tree.nex
+	cat $method.trees.nex | perl -0777 -pe "s/tree mpest.*$//gsm" > $method.tree.nex
 	sed "${besttreeline}q;d" $method.trees.nex >> $method.tree.nex
 	echo "end;" >> $method.tree.nex
 	python -c '
@@ -74,7 +74,7 @@ if not os.path.exists(src_fpath):
  
 dest_fpath = os.path.expanduser("'$method.tree'")
 trees = dendropy.TreeList.get_from_path(src_fpath, "nexus")
-trees[-1].write_to_path(dest_fpath, "newick",write_rooting=False)'
+trees[-1].write_to_path(dest_fpath, "newick",suppress_rooting=True)'
 	
 } &
 done
