@@ -36,7 +36,7 @@ do
 	seed=$(expr $RANDOM$RANDOM % 10000000)
 	nruns=20 #Like raxml
 	leaves=($(cat $H/$id/data/gtrees_estimated.trees |sed -e "s/:[^),]*//g" -e "s/)[0-9.]*//g" -e "s/[(,);]/ /g" -e 's/ /\'$'\n''/g' |sort|uniq|tail -n+2))
-	species=($(echo ${leaves[*]}| tr ' ' '\n' |sed "s/\(.*\)\_.*\_.*$/\1/" |uniq))
+	species=($(echo ${leaves[*]}| tr ' ' '\n' |sed "s/\(.*\)\_.*\_.*$/\1/" | sort | uniq))
 	ntaxa=${#species[@]}
 	nloci=$(cat $H/$id/data/gtrees_estimated.trees | wc -l)
 	smap=""
@@ -46,7 +46,7 @@ do
 		nind=${#individuals[*]}
 		smap=$(echo "$smap$sp $nind ${individuals[*]}\n")
 	done
-	echo -e "$H/$id/data/gtrees_estimated.trees\n0\n$seed\n$nruns\n$nloci $ntaxa\n${smap}0" > "$H/$id/$method/control.file"
+	echo -e "../data/gtrees_estimated.trees\n0\n$seed\n$nruns\n$nloci $ntaxa\n${smap}0" > "$H/$id/$method/control.file"
 
 	mkdir -p $H/$id/$method
 	cd $H/$id/$method
