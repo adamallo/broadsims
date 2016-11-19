@@ -296,7 +296,7 @@ njst.sptree<-function(genetrees, spname, taxaname, species.structure)
     	speciesdistance <- pair.dist.mulseq(dist2, species.structure)
 
 	tree<-write.tree(nj(speciesdistance))
-	node2name(tree,name=spname)
+	#node2name(tree,name=spname)
 }
 #My code
 args=commandArgs(trailingOnly=TRUE)
