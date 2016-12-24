@@ -29,7 +29,7 @@ else
 fi
 
 echo starting in $i, executing the script in $n folders
-#method=njst
+#methods=("njst")
 methods=("njst" "star" "steac")
 for j in `seq $i $(( $i + $n -1 ))`
 do
@@ -41,7 +41,7 @@ do
 	do
 		mkdir -p $H/$id/$method
 		cd $H/$id/$method
-
+		rm -f $method.time
 #test -s $method.tre && echo output already exists. 
 #test -s $method.tre && exit 1
 

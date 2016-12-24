@@ -38,3 +38,22 @@ qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts
 qsub -p -1 -t 1-10000 -e e_log/ -o o_log/ -q gpu.q scripts/build_constraint_tree.sh sim_broadsims/
 qsub -p -4 -t 1-10000 -e e_log/ -o o_log/ -q compute-1-x.q,compute-0-x.q scripts/run_raxml_concat.sh sim_broadsims/ ##Actually I'm running this in Finisterrae2 using a different script
 
+##In finisterrae2
+###############################################
+#Data collection
+home="/home/uvi/be/dma/lustre/broadsims";for i in *; do if [[ -d $i/concat ]] && [[ ! -f $i/concat/raxml_files.tar.gz ]]; then cd $i/concat; mkdir raxml_files; mv RAxML* raxml_files; tar -cvzf raxml_files.tar.gz raxml_files; rm -rf raxml_files; cd $home ;fi;done
+
+##Species tree estimation
+#########################
+
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_mrpmatrix.sh
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_greedy.sh
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -p -1 -e ../e_log/ -o ../o_log/ run_mrl.sh
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_mpest.sh 4
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_njst_star_steac.sh 4
+
+##Estimation of 500 concatenation trees at random to compare speeds with finisterrae2
+#####################################################################################
+random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed); for (i=0;i<n;++i) print int(min+rand()*(max-min+1))}')
+nDigits=5
+for i in $random; do id=$(printf "%0${nDigits}d" $i); echo $id;qsub -q compute-0-x.q,compute-1-x.q -e e_log/ -o o_log/ scripts/run_raxml_concat2.sh sim_broadsims $id;done > scripts/concat2.log

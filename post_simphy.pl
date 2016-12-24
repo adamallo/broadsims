@@ -80,9 +80,9 @@ my $SQL= DBI->connect("dbi:SQLite:dbname=$SQL_name","","",{ RaiseError => 1, Aut
 $SQL->do("DROP TABLE IF EXISTS Sequences");
 $SQL->do("PRAGMA foreign_keys=yes");
 $SQL->do("CREATE TABLE Sequences(AID INTEGER PRIMARY KEY, SID INTEGER, n_ltree INTEGER, n_gtree INTEGER, length INTEGER, FOREIGN KEY(SID) REFERENCES Species_Trees(SID))");
-#$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Shape_seqlength");
-#$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Logscale_seqlength");
-#$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Alpha_site");
+$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Shape_seqlength");
+$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Logscale_seqlength");
+$SQL->do("ALTER TABLE Species_Trees ADD COLUMN Alpha_site");
 $SQL->commit();						
 
 opendir (my $dirs_handler, ".");

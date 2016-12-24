@@ -10,7 +10,7 @@ then
 	if [[ -d $1 ]] && [[ -n "$SGE_TASK_ID" ]]
 	then
 		dir=$1
-		id=$(printf "%05d" $SGE_TASK_ID)
+		id=$(printf "%06d" $SGE_TASK_ID)
 	elif [[ -d $1 ]]
 	then
 		echo "Error, folder_id not specified without using a job array. Usage: script simphy_dir [folder_id]"

@@ -10,7 +10,7 @@ then
         if [[ -d $1 ]] && [[ -n "$SGE_TASK_ID" ]]
         then
                 dir=$1
-                id=$(printf "%06d" $SGE_TASK_ID)
+                id=$(printf "%05d" $SGE_TASK_ID)
         elif [[ -d $1 ]]
         then
                 echo "Error, folder_id not specified without using a job array. Usage: script simphy_dir [folder_id]"
@@ -40,9 +40,24 @@ else
         exit
 fi
 
+method="concat"
 cd $dir/$id
-for input_file in *_TRUE.phy
-do
-	outfile=$(echo $input_file | sed "s/_TRUE.phy//")
-	/usr/bin/time -p -o$outfile.g_tree.time raxmlHPC-SSE3 -s $input_file -m GTRGAMMA -p 2222 -N 20 -n $outfile
-done
+
+##untar concat.phy
+tar -xvzf seqs.tar.gz seqs/concat.phy
+
+mkdir $method
+cd $method
+outfile=${method}2
+/usr/bin/time -p -o time2.stat raxmlHPC-SSE3 -g ../data/constraintTree.trees -s ../seqs/concat.phy -m GTRGAMMA -p 2222 -N 20 -n $outfile 1>${method}2.out 2>${method}2.err
+mv RAxML_bestTree.$outfile ${method}2.tree
+
+#Deleting the just extracted concat.phy
+rm -rf ../seqs/*
+rmdir ../seqs
+
+#Reorganization
+mkdir raxml_files2
+mv RAxML* raxml_files2
+tar -czf raxml_files2.tar.gz raxml_files2
+rm -rf raxml_files2
