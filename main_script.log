@@ -51,9 +51,10 @@ qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_gre
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -p -1 -e ../e_log/ -o ../o_log/ run_mrl.sh
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_mpest.sh 4
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_njst_star_steac.sh 4
+qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_astral.sh
 
 ##Estimation of 500 concatenation trees at random to compare speeds with finisterrae2
 #####################################################################################
-random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed); for (i=0;i<n;++i) print int(min+rand()*(max-min+1))}')
-nDigits=5
-for i in $random; do id=$(printf "%0${nDigits}d" $i); echo $id;qsub -q compute-0-x.q,compute-1-x.q -e e_log/ -o o_log/ scripts/run_raxml_concat2.sh sim_broadsims $id;done > scripts/concat2.log
+#random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed); for (i=0;i<n;++i) printf("%05d ",int(min+rand()*(max-min+1)))}') ##Error
+random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed);newr=""; for (i=0;i<n;++i) {r=sprintf("%05d",int(min+rand()*(max-min+1)));if (match(newr,r)){--i} else{newr=newr " " r;print r}}}')
+for i in $random; do qsub -q compute-0-x.q,compute-1-x.q -e e_log/ -o o_log/ scripts/run_raxml_concat2.sh sim_broadsims $i;done > scripts/concat2.log

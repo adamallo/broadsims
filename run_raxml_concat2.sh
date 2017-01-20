@@ -43,6 +43,12 @@ fi
 method="concat"
 cd $dir/$id
 
+if [[ -d $method ]]
+then
+	echo "Folder already present"
+	exit
+fi
+
 ##untar concat.phy
 tar -xvzf seqs.tar.gz seqs/concat.phy
 
