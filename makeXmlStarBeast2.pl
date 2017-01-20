@@ -61,7 +61,6 @@ our $iSeq=0;
 ##Loop variables
 ################
 my %species;
-my %taxa;
 my @loci;
 my $sp_regex=qr/^(.*)_[0-9]+_[0-9]+$/;
 my $taxon;
@@ -93,24 +92,6 @@ else
 	$nloci=scalar @files;
 }
 
-##Needed if there is missing data. Not tested, though!	
-foreach my $file (@files)
-{
-	
-	no warnings 'uninitialized';	
-	open(my $FILE,$file) or die "Error opening the file $file";
-	@alignment=<$FILE>;
-	close($FILE);
-	$header=shift(@alignment);
-	($nseqs,$alLength)=split(" ",$header);
-	for (my $n=0; $n<$nseqs; ++$n)
-	{
-		$sp= ($taxon =~ s/$sp_regex/$1/r);
-		($taxon,$sequence)=split(" ",$alignment[$n]);
-		$taxa{$taxon}++;
-	}
-}
-
 foreach my $file (@files)
 {
 	$filename= ($file=~s/^.*\/(.*)\.[^.]+$/$1/r);
@@ -138,9 +119,8 @@ foreach my $file (@files)
 		{
 			$species{$sp}{$taxon}++; ##This is replicating %taxa but split by species. I do need the secondary array in order to make it more efficient to "push unique values into the array".
 		}
-		my $totaltaxon=$taxa{$taxon}+1; #One extra for the species tree
-		#my $totaltaxon=$nloci+1; #no missing data
-		print ($XML "\t<sequence id=\"${taxon}_$iSeq\" taxon=\"$taxon\" totalcount=\"$totaltaxon\" value=\"$sequence\"/>\n"); ##Missing data candidate. Untested
+		
+		print ($XML "\t<sequence id=\"${taxon}_$iSeq\" taxon=\"$taxon\" totalcount=\"4\" value=\"$sequence\"/>\n"); ##Missing data candidate. Untested
 		$iSeq+=1;
 	}
 	print($XML "</data>\n\n");	
@@ -260,7 +240,7 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 				#RelativeRates
 				print($XML pushGamma(3,"RateACPrior.s:$locus","\@rateAC.s:$locus","0.05","10"));
 				print($XML pushGamma(3,"RateAGPrior.s:$locus","\@rateAG.s:$locus","0.05","20"));
-				print($XML pushGamma(3,"RateATrior.s:$locus","\@rateAT.s:$locus","0.05","10"));
+				print($XML pushGamma(3,"RateATPrior.s:$locus","\@rateAT.s:$locus","0.05","10"));
 				print($XML pushGamma(3,"RateCGPrior.s:$locus","\@rateCG.s:$locus","0.05","10"));
 				print($XML pushGamma(3,"RateGTPrior.s:$locus","\@rateGT.s:$locus","0.05","10"));
 
