@@ -340,11 +340,11 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 		
 		#Substitution operators	
     		print($XML "\t<operator id=\"gammaShapeScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@gammaShape.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
-		print($XML "\t<operator id=\"RateACScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAC.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
-		print($XML "\t<operator id=\"RateAGScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAG.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
-		print($XML "\t<operator id=\"RateATScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAT.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
-		print($XML "\t<operator id=\"RateCGScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateCG.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
-		print($XML "\t<operator id=\"RateGTScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateGT.s:$locus\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
+		print($XML "\t<operator id=\"RateACScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAC.s:$locus\" scaleFactor=\"0.8\" weight=\"1.0\"/>\n");
+		print($XML "\t<operator id=\"RateAGScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAG.s:$locus\" scaleFactor=\"0.8\" weight=\"1.0\"/>\n");
+		print($XML "\t<operator id=\"RateATScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateAT.s:$locus\" scaleFactor=\"0.8\" weight=\"1.0\"/>\n");
+		print($XML "\t<operator id=\"RateCGScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateCG.s:$locus\" scaleFactor=\"0.8\" weight=\"1.0\"/>\n");
+		print($XML "\t<operator id=\"RateGTScaler.s:$locus\" spec=\"ScaleOperator\" parameter=\"\@rateGT.s:$locus\" scaleFactor=\"0.8\" weight=\"1.0\"/>\n");
 		print($XML "\t<operator id=\"FrequenciesExchanger.s:$locus\" spec=\"DeltaExchangeOperator\" delta=\"0.08\" weight=\"1.5\">\n");
 			print($XML "\t\t<parameter idref=\"freqParameter.s:$locus\"/>\n");
 		print($XML "\t</operator>\n");
