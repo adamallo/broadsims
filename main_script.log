@@ -58,3 +58,30 @@ qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_ast
 #random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed); for (i=0;i<n;++i) printf("%05d ",int(min+rand()*(max-min+1)))}') ##Error
 random=$(awk -v min=1 -v max=10000 -v n=500 -v seed=25 'BEGIN{srand(seed);newr=""; for (i=0;i<n;++i) {r=sprintf("%05d",int(min+rand()*(max-min+1)));if (match(newr,r)){--i} else{newr=newr " " r;print r}}}')
 for i in $random; do qsub -q compute-0-x.q,compute-1-x.q -e e_log/ -o o_log/ scripts/run_raxml_concat2.sh sim_broadsims $i;done > scripts/concat2.log
+
+##DATA RECOLECTION
+##################
+
+#List if times for speed comparison
+for i in *; do if [[ -d $i ]]; then if [[ -s $i/concat/time2.stat ]]; then echo $i >> concat2.list;fi;fi;done
+
+#Times for the 500 trees
+while read line; do qsub -q compute-1-x.q,compute-0-x.q ../scripts/get_times_concat2.sh $line;done < concat2.list
+
+#Get gtree error
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/RF_gtrees.sh
+
+#Get stree error
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/RF_strees.sh
+
+#Get times for gtree (this has to be finised to start the next, they are dependent)
+
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/get_times_gtrees.sh
+
+#Get times for stree
+
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/get_times_strees.sh
+
+##Putting together the RFs, times and gRFs
+echo "rep,rf,method" > rf.csv; echo "rep,time,stime,method" > times.csv;echo "rep,mrf,sdrf" > grf.csv; for i in *; do if [[ -d $i ]]; then tail -n+2 $i/data/rf.csv >> rf.csv; tail -n+2 $i/data/times.csv >> times.csv;echo "$i,"$(tail -n+2 $i/data/gtrees_rfsummary.csv) >> grf.csv;fi;done
+echo "rep,time,stime,method" > times2.csv; while read id; do tail -n+2 $id/data/times2.csv >> times2.csv;done < concat2.list
