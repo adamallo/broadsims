@@ -52,6 +52,9 @@ qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -p -1 -e ../e_log/ -o ../o_log/ r
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_mpest.sh 4
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000:4 -pe threaded 4 -e ../e_log/ -o ../o_log/ run_njst_star_steac.sh 4
 qsub -q compute-0-x.q,compute-1-x.q -t 1-10000 -e ../e_log/ -o ../o_log/ run_astral.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/run_revpomo.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/run_mdc.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/run_astridm.sh
 
 ##Estimation of 500 concatenation trees at random to compare speeds with finisterrae2
 #####################################################################################
@@ -69,19 +72,28 @@ for i in *; do if [[ -d $i ]]; then if [[ -s $i/concat/time2.stat ]]; then echo 
 while read line; do qsub -q compute-1-x.q,compute-0-x.q ../scripts/get_times_concat2.sh $line;done < concat2.list
 
 #Get gtree error
-qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/RF_gtrees.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/RF_gtrees.sh
 
 #Get stree error
-qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/RF_strees.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/RF_strees.sh
 
 #Get times for gtree (this has to be finised to start the next, they are dependent)
 
-qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/get_times_gtrees.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/get_times_gtrees.sh
 
 #Get times for stree
 
-qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/sim_broadsims/newe_log -o /home/dmallo/broadsims/new/sim_broadsims/newo_log -t 1-10000 scripts/get_times_strees.sh
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/get_times_strees.sh
 
 ##Putting together the RFs, times and gRFs
 echo "rep,rf,method" > rf.csv; echo "rep,time,stime,method" > times.csv;echo "rep,mrf,sdrf" > grf.csv; for i in *; do if [[ -d $i ]]; then tail -n+2 $i/data/rf.csv >> rf.csv; tail -n+2 $i/data/times.csv >> times.csv;echo "$i,"$(tail -n+2 $i/data/gtrees_rfsummary.csv) >> grf.csv;fi;done
 echo "rep,time,stime,method" > times2.csv; while read id; do tail -n+2 $id/data/times2.csv >> times2.csv;done < concat2.list
+
+##Calculating measurables
+qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ -t 1-10000 scripts/measurables_gtrees.sh
+
+echo "rep,meanRF,sdRF,meanLength,sdLength,meanHight,sdHight,meanbmin,sdbmin,meanbranch,sdmeanbranch"> measurables.csv;for i in *; do if [[ -d $i ]]; then tail -n+2 $i/data/measurables.csv >> measurables.csv;fi;done
+
+##RevPomo stats
+echo "rep,etheta,etlength,etlengthsubs,etintlenght,etintlengthsubs" > revpomostats.csv; for i in *; do if [[ -d $i ]]; then tail -n+2 $i/data/sumrevpomo.csv >> revpomostats.csv;fi;done
+

@@ -19,8 +19,9 @@ else
 fi
 
 echo "rep,time,stime,method" > $H/$id/data/times.csv
-methods=("astral" "greedy" "mpest" "mrpmatrix" "mrl" "njst" "star" "steac")
-#methods=("astral" "greedy" "mpest" "mrl" "njst" "star" "steac" "revpomo" "starbeast2" "astrid")
+
+methods=("astral" "greedy" "mpest" "mrl" "njst" "star" "steac" "revpomo" "astrid" "mdc" "astridmu")
+#methods=("astral" "greedy" "mpest" "mrl" "njst" "star" "steac" "revpomo" "starbeast2" "astrid" "mdc" "astridmu")
 gtreetime=$(cat $H/$id/gtrees_times/totalgtime.txt)
 
 for m in ${methods[@]}

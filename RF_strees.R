@@ -45,4 +45,4 @@ for (m in 1:length(methods))
 
 final_data$rep=as.numeric(final_data$rep)
 final_data$rf=as.numeric(final_data$rf)
-write.table(final_data,file="data/rf.csv",sep=",",quote=FALSE,row.names=FALSE,col.names=TRUE)
+write.table(final_data,file="data/rf.csv",sep=",",quote=FALSE,row.names=FALSE,col.names=TRUE,append=FALSE)

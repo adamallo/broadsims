@@ -1,11 +1,8 @@
 #!/bin/bash
-module load gcc/5.2.0
-module load R/3.2.2_1
 
-SCRATCH=/state/partition1/dmallo
-SCRIPT_DIR=/home/dmallo/broadsims/new/scripts
 H=/home/dmallo/broadsims/new/sim_broadsims
 nDigits=5
+SCRATCH=/state/partition1/dmallo
 
 if [ "$SGE_TASK_ID" == "" ] || [ "$SGE_TASK_ID" == "undefined" ]
 then
@@ -21,6 +18,10 @@ else
         id=$(printf "%0${nDigits}d" $id)
 fi
 
-methods=("astral" "greedy" "mpest" "mrl" "njst" "star" "steac" "astrid" "astridmu" "revpomo" "mdc")
-Rscript $SCRIPT_DIR/RF_strees.R $H/$id ${methods[@]}
+mkdir -p $SCRATCH/$id
+tar xvzf $H/$id/seqs.tar.gz -C $SCRATCH/$id --strip-components=1 seqs/*.phy
+module load R/3.2.2_1
+module load gcc/5.2.0
 
+Rscript $H/../scripts/watterson.R $SCRATCH/$id $H/$id
+rm -rf $SCRATCH/$id

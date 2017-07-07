@@ -21,6 +21,4 @@ else
         id=$(printf "%0${nDigits}d" $id)
 fi
 
-methods=("astral" "greedy" "mpest" "mrl" "njst" "star" "steac" "astrid" "astridmu" "revpomo" "mdc")
-Rscript $SCRIPT_DIR/RF_strees.R $H/$id ${methods[@]}
-
+Rscript $SCRIPT_DIR/measurables_gtrees.R $H/$id
