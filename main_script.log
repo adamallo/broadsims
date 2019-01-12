@@ -97,3 +97,11 @@ echo "rep,meanRF,sdRF,meanLength,sdLength,meanHight,sdHight,meanbmin,sdbmin,mean
 ##RevPomo stats
 echo "rep,etheta,etlength,etlengthsubs,etintlenght,etintlengthsubs" > revpomostats.csv; for i in *; do if [[ -d $i ]]; then tail -n+2 $i/data/sumrevpomo.csv >> revpomostats.csv;fi;done
 
+##Sorting for STARBEAST2
+sqlite3 final_first_1000rep.db 'select SID from Species_Trees ORDER BY Leaves, N_Loci;' | xargs -L 1 printf "%05d\n" > sorted.txt
+
+##Generation of input files
+while read id; do echo qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ scripts/generate_xmls_starbeast.sh $id; done < /home/dmallo/broadsims/new/sim_broadsims/sorted.txt
+
+##Running starbeast
+while read line; do qsub -q compute-1-x.q,compute-0-x.q -e /home/dmallo/broadsims/new/newe_log/ -o /home/dmallo/broadsims/new/newo_log/ scripts/run_beast.sh $line;done < <(echo $(head sim_broadsims/sorted.txt) $(tail sim_broadsims/sorted.txt) | tr " " "\n")
