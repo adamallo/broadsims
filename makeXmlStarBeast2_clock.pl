@@ -21,7 +21,7 @@ my $help;
 my $nloci=0;
 my $seed=20;
 
-my $usage="Usage: $0 [options] -i input_dir -o output_file -n outputlog_name\n\nThis script generates a StarBeast2 XML file out of alignment files present in a folder. Those must be in Phylip format. This script has not been tested for missing data (all gene trees are expected to have the same taxa). Quick description of the model: Yule Species Tree with birth rate prior U(-inf,10000).Multispecies coalescent model with fixed strict rate 1, and estimated relative mutation rates for the different loci, ploidy n and analytical integration of population sizes. Population sizes prior Gamma with shape 3 and mean 1/X.GTR+G substitution model with 4 discretized rates, (G prior Exp(1)), (GTR rates prior, Gamma(0.05,10) except AG Gamma(0.05,20).\n\nOptions\n---------\n--logperiod: period for all written logs.\n--logscreenperiod: period for screen log.\n--storeperiod: period for the storage of the MCMC state\n-s/--seed: seed for the pseudo-random number generator\n--maxloci: only consider a random sample of this specified number of loci without replacement\n-r/--relaxedSTreeUCLN: species tree relaxed clock model (uncorrelated log-normal)\n-e/--empirical: use empirical frequencies in the GTR model\n--geneTreeLog: log gene trees and gene tree parameters\n\n";
+my $usage="Usage: $0 [options] -i input_dir -o output_file -n outputlog_name\n\nThis script generates a StarBeast2 XML file out of alignment files present in a folder. Those must be in Phylip format. This script has not been tested for missing data (all gene trees are expected to have the same taxa). Quick description of the model: Yule Species Tree with birth rate prior U(-inf,10000).Multispecies coalescent model with fixed strict rate 1, and estimated relative mutation rates for the different loci, ploidy n and analytical integration of population sizes. Population sizes prior Gamma with shape 3 and mean 1/X.GTR+G substitution model with 4 discretized rates, (G prior Exp(1)), (GTR rates prior, Gamma(0.05,10) except AG Gamma(0.05,20).\n\nOptions\n---------\n--logperiod: period for all written logs.\n--logscreenperiod: period for screen log.\n--storeperiod: period for the storage of the MCMC state\n--length: chain length\n-s/--seed: seed for the pseudo-random number generator\n--maxloci: only consider a random sample of this specified number of loci without replacement\n-r/--relaxedSTreeUCLN: species tree relaxed clock model (uncorrelated log-normal)\n-e/--empirical: use empirical frequencies in the GTR model\n--geneTreeLog: log gene trees and gene tree parameters\n\n";
 
 ######
 #Main
@@ -41,7 +41,8 @@ my $usage="Usage: $0 [options] -i input_dir -o output_file -n outputlog_name\n\n
 	'help|h' => \$help,
 	'relaxedSTreeUCLN|r' => \$relaxed_STree,
 	'empirical|e' => \$empiricalFreqs,
-	'geneTreeLog' => \$log_genes
+	'geneTreeLog' => \$log_genes,
+	'length=i' => \$chainlength
 )) or (($input_dir eq "") || ($outfile eq "") || $help) and die $usage;
 
 srand($seed);
@@ -205,7 +206,7 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 			print($XML "\t\t</tree>\n");
 
 			#ClockRate
-			print($XML "\t\t<parameter id=\"mutationRate.s:$locus\" lower=\"0.0\" name=\"stateNode\">1.0</parameter>\n");
+			print($XML "\t\t<parameter id=\"clockRate.c:$locus\" lower=\"0.0\" name=\"stateNode\">1.0</parameter>\n");
 			
 			#Substitution process parameteres
 			print($XML "\t\t<parameter id=\"gammaShape.s:$locus\" name=\"stateNode\">1.0</parameter>\n"); #Site heterogeneity
@@ -257,6 +258,7 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 			print($XML pushUniform(3,"speciationRatePrior.t:Species","\@speciationRate.t:Species",undef,"10000.0")); #Birth rate
 			print($XML pushOneOnX(3,"popMeanPrior.Species","\@popMean.Species"));#Mean population size
             		
+			#S-Tree relaxed clock
 			if($relaxed_STree == 1)
 			{
 				print($XML pushLogNormal(3,"branchRatesStdevPrior.Species","\@branchRatesStdev.Species","1.0","2.0"));
@@ -276,6 +278,9 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 				print($XML pushGamma(3,"RateCGPrior.s:$locus","\@rateCG.s:$locus","0.05","10"));
 				print($XML pushGamma(3,"RateGTPrior.s:$locus","\@rateGT.s:$locus","0.05","10"));
 
+				#Gene tree clock
+				print($XML pushLogNormal(3,"clockRatePrior.c:$locus", "\@clockRate.c:$locus", "1.0", "1.0"));
+
 			}
 		print($XML "\t\t</distribution>\n");
 		
@@ -287,7 +292,8 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 			#Likelihood of each gene tree
 			print($XML "\t\t\t<distribution id=\"treeLikelihood.$locus\" spec=\"TreeLikelihood\" data=\"\@$locus\" tree=\"\@Tree.t:$locus\">\n");
 				#Site Model
-				print($XML "\t\t\t\t<siteModel id=\"SiteModel.s:$locus\" spec=\"SiteModel\" gammaCategoryCount=\"4\" shape=\"\@gammaShape.s:$locus\" mutationRate=\"\@mutationRate.s:$locus\">\n");
+				print($XML "\t\t\t\t<siteModel id=\"SiteModel.s:$locus\" spec=\"SiteModel\" gammaCategoryCount=\"4\" shape=\"\@gammaShape.s:$locus\">\n");
+					print($XML "\t\t\t\t\t<parameter id=\"mutationRate.s:$locus\" estimate=\"false\" name=\"mutationRate\">1.0</parameter>\n"); #Fixed mutation rate for all gene trees. We will estimate clocks.
 					print($XML "\t\t\t\t\t<parameter id=\"proportionInvariant.s:$locus\" estimate=\"false\" lower=\"0.0\" name=\"proportionInvariant\" upper=\"1.0\">0.0</parameter>\n"); #No invariants
 					print($XML "\t\t\t\t\t<substModel id=\"gtr.s:$locus\" spec=\"GTR\" rateAC=\"\@rateAC.s:$locus\" rateAG=\"\@rateAG.s:$locus\" rateAT=\"\@rateAT.s:$locus\" rateCG=\"\@rateCG.s:$locus\" rateGT=\"\@rateGT.s:$locus\">\n"); #Substitution model
 						print($XML "\t\t\t\t\t\t<parameter id=\"rateCT.s:$locus\" estimate=\"false\" lower=\"0.001\" name=\"rateCT\">1.0</parameter>\n"); ##Lacking dummy parameter added here since we are estimating the relative rates relative to CT.
@@ -308,22 +314,21 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 				#Clock model
 				if($relaxed_STree == 0)
 				{
-					print($XML "\t\t\t\t<branchRateModel id=\"StrictClock.c:$locus\" spec=\"beast.evolution.branchratemodel.StrictClockModel\">\n");
+					print($XML "\t\t\t\t<branchRateModel id=\"StrictClock.c:$locus\" spec=\"beast.evolution.branchratemodel.StrictClockModel\" clock.rate=\"\@clockRate.c:$locus\"/>\n");
 				}
 				else
 				{
 					if($locus_i==0) ##We generate the model for species tree rates only in the first one and link it to the next
 					{
-						print($XML "\t\t\t\t<branchRateModel id=\"SpeciesTreeRelaxedClock.c:$locus\" spec=\"starbeast2.StarBeastClock\" geneTree=\"\@geneTree.t:$locus\">\n");
+						print($XML "\t\t\t\t<branchRateModel id=\"SpeciesTreeRelaxedClock.c:$locus\" spec=\"starbeast2.StarBeastClock\" clock.rate=\"\@clockRate.c:$locus\" geneTree=\"\@geneTree.t:$locus\">\n");
 							print($XML "\t\t\t\t\t<speciesTreeRates id=\"branchRatesModel.Species\" spec=\"starbeast2.UncorrelatedRates\" estimateRoot=\"true\" rates=\"\@branchRates.Species\" stdev=\"\@branchRatesStdev.Species\" tree=\"\@Tree.t:Species\"/>\n");
+						print($XML "\t\t\t\t</branchRateModel>\n");
 					}
 					else
 					{
-						print($XML "\t\t\t\t<branchRateModel id=\"SpeciesTreeRelaxedClock.c:$locus\" spec=\"starbeast2.StarBeastClock\" geneTree=\"\@geneTree.t:$locus\" speciesTreeRates=\"\@branchRatesModel.Species\">\n");
+						print($XML "\t\t\t\t<branchRateModel id=\"SpeciesTreeRelaxedClock.c:$locus\" spec=\"starbeast2.StarBeastClock\" clock.rate=\"\@clockRate.c:$locus\" geneTree=\"\@geneTree.t:$locus\" speciesTreeRates=\"\@branchRatesModel.Species\"/>\n");
 					}
 				}
-						print($XML "\t\t\t\t\t<parameter id=\"strictClockRate.c:$locus\" estimate=\"false\" lower=\"0.0\" name=\"clock.rate\">1.0</parameter>\n");
-					print($XML "\t\t\t\t</branchRateModel>\n");
 			print($XML "\t\t\t</distribution>\n");
 		}
 		print($XML "\t\t</distribution>\n");
@@ -372,18 +377,14 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 		print($XML "\t<operator id=\"branchRatesUniform.Species\" spec=\"starbeast2.DiscreteRateUniform\" optimise=\"false\" treeRates=\"\@branchRates.Species\" weight=\"9.0\"/>\n");
 		print($XML "\t<operator id=\"branchRatesStdevScaler.Species\" spec=\"ScaleOperator\" parameter=\"\@branchRatesStdev.Species\" scaleFactor=\"0.75\" weight=\"1.0\"/>\n");
 	}
-	#All gene trees
-	print($XML "\t<operator id=\"FixMeanMutationRatesOperator\" spec=\"DeltaExchangeOperator\" delta=\"0.75\" weight=\"3.0\">\n");
-	foreach my $locus (@loci)
-	{
-		print($XML "\t\t<parameter idref=\"mutationRate.s:$locus\"/>\n");
-	}
-		print($XML "\t\t<weightvector id=\"weightparameter\" spec=\"parameter.IntegerParameter\" dimension=\"".scalar @loci."\" estimate=\"false\" lower=\"0\" upper=\"0\">".join(" ",@alignment_sizes)."</weightvector>\n");
-	print($XML "\t</operator>\n");
 	
 	#All trees
 	print($XML "\t<operator id=\"updown.all.Species\" spec=\"UpDownOperator\" scaleFactor=\"0.75\" weight=\"6.0\">\n");#This may need to be reorganized
 		print($XML "\t\t<up idref=\"speciationRate.t:Species\"/>\n");
+		foreach my $locus (@loci)
+		{
+			print($XML "\t\t<up idref=\"clockRate.c:$locus\"/>\n");
+		}
 		print($XML "\t\t<down idref=\"Tree.t:Species\"/>\n");
 		print($XML "\t\t<down idref=\"popMean.Species\"/>\n");
 		foreach my $locus (@loci)
@@ -404,6 +405,7 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 		print($XML "\t<operator id=\"Wide.t:$locus\" spec=\"Exchange\" isNarrow=\"false\" tree=\"\@Tree.t:$locus\" weight=\"15.0\"/>\n");
 		print($XML "\t<operator id=\"WilsonBalding.t:$locus\" spec=\"WilsonBalding\" tree=\"\@Tree.t:$locus\" weight=\"15.0\"/>\n");
 		print($XML "\t<operator id=\"clockUpDownOperator.c:$locus\" spec=\"UpDownOperator\" scaleFactor=\"0.95\" weight=\"3.0\">\n");
+			print($XML "\t\t<up idref=\"clockRate.c:$locus\"/>\n");
 			print($XML "\t\t<down idref=\"Tree.t:$locus\"/>\n");
 		print($XML "\t</operator>\n");
 	
@@ -420,6 +422,9 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 				print($XML "\t\t<parameter idref=\"freqParameter.s:$locus\"/>\n");
 			print($XML "\t</operator>\n");
 		}
+
+		#Clock operators
+		print($XML "\t<operator id=\"clockRateScaler.c:$locus\" spec=\"ScaleOperator\" parameter=\"\@clockRate.c:$locus\" scaleFactor=\"0.5\" weight=\"3.0\"/>\n");
 	}
 	
 	#Screen logger
@@ -451,7 +456,7 @@ print($XML "<run id=\"mcmc\" spec=\"$chaintype\" chainLength=\"$chainlength\" st
 			{
 				print($XML "\t\t<log idref=\"treeLikelihood.$locus\"/>\n");
 				print($XML "\t\t<log id=\"TreeHeight.t:$locus\" spec=\"beast.evolution.tree.TreeHeightLogger\" tree=\"\@Tree.t:$locus\"/>\n");
-				print($XML "\t\t<log idref=\"mutationRate.s:$locus\"/>\n");
+				print($XML "\t\t<log idref=\"clockRate.c:$locus\"/>\n");
 				print($XML "\t\t<log idref=\"gammaShape.s:$locus\"/>\n");
 				print($XML "\t\t<log idref=\"rateAC.s:$locus\"/>\n");
 				print($XML "\t\t<log idref=\"rateAG.s:$locus\"/>\n");

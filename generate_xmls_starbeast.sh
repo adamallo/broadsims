@@ -1,30 +1,32 @@
 #!/bin/bash
 module load perl/5.22.1
 
-H=/home/dmallo/broadsims/new/sim_broadsims
 BIN=/home/dmallo/broadsims/new/scripts/
 SCRATCH=/state/partition1/dmallo
-nloci=50
-usage="$0 id\n The id option $1 is not valid"
+usage="$0 name nloci seed\n"
 
-
-id=$1
-
-if [[ ! -d $H/$id ]]
+if [[ "$#" -lt 3 ]]
 then
-	echo "$usage"
+	echo -e $usage
 	exit 1
 fi
 
-mkdir $H/$id/starbeast2/
+name=$1
+nloci=$2
+seed=$3
 
-#if [[ ! -d  $H/$id/seqs ]]
-#then
-	mkdir $SCRATCH/
-	mkdir $SCRATCH/$id
-	tar xvzf $H/$id/seqs.tar.gz -C $SCRATCH/$id --strip-components=1 seqs/*TRUE.phy
-	perl $BIN/makeXmlStarBeast2.pl -i $SCRATCH/$id -o $H/$id/starbeast2/input.xml -n ${id}_50 --maxloci 50
-	rm -rf $SCRATCH/$id
-#else
-#	perl $BIN/makeXmlStarBeast2.pl -i $H/$id/seqs -o $H/$id/starbeast2/input.xml -n ${id}_50 --maxloci 50
-#fi
+shift 3
+
+if [[ ! -d  ../seqs ]] && [[ -f ../seqs.tar.gz ]]
+then
+	mkdir -p $SCRATCH/$name
+	tar xvzf ../seqs.tar.gz -C $SCRATCH/$name --strip-components=1 seqs/*TRUE.phy
+	perl $BIN/makeXmlStarBeast2_clock.pl -i $SCRATCH/$name -o ${name}.xml -n $name --maxloci $nloci --seed $seed $@
+	rm -rf $SCRATCH/$name
+elif [[ -f ../seqs.tar.gz ]]
+then
+	perl $BIN/makeXmlStarBeast2_clock.pl -i ../seqs -o ${name}.xml -n $name --maxloci $nloci --seed $seed $@
+else
+	echo "ERROR: original sequences not found"
+	exit 1
+fi
